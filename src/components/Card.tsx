@@ -1,31 +1,51 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 
 interface CardProps {
-  name: string;
+  title: string;
+  subtitle: string;
   image: string;
-  location: string;
-  rating: number; // 0–5
+  category?: string;
+  href?: string; // link ke halaman detail
 }
 
-export default function Card({ name, image, location }: CardProps) {
-  return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow w-60">
-      {/* gambar */}
-      <Image
-        src={image}
-        alt={name}
-        width={400}
-        height={300}
-        className="w-full h-48 object-cover"
-      />
+const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) => {
+  const cardContent = (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      {/* Thumbnail */}
+      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+        <div className="w-32 h-32 rounded-full overflow-hidden relative">
+          <Image
+            src={image}
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 15vw"
+          />
+        </div>
+      </div>
 
-      {/* isi card */}
+      {/* Text content */}
       <div className="p-4">
-        <h3 className="text-lg font-semibold text-gray-800">{name}</h3>
-        <p className="text-sm text-gray-500">{location}</p>
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+        {category && <p className="text-xs text-gray-400 mt-2">{category}</p>}
+        <p className="text-xs text-gray-400 mt-1">RC HUMIC</p>
       </div>
     </div>
   );
-}
+
+  // kalau ada href, bungkus pakai Link
+  return href ? (
+    <Link href={href} className="block">
+      {cardContent}
+    </Link>
+  ) : (
+    cardContent
+  );
+};
+
+export default Card;
