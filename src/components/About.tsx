@@ -6,7 +6,7 @@ export default function About() {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
         {/* kiri: text */}
         <div>
-          <p className="text-lg md:text-3xl font-bold text-center text-gray-900 mt-6">
+          <p className="text-lg md:text-3xl font-bold text-center text-gray-900">
             About CoE HUMIC Engineering
           </p>
           <hr className="w-56 border-2 border-red-800 mt-3 mb-6 mx-auto" />

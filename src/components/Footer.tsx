@@ -6,7 +6,7 @@ import { Instagram, Linkedin, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#16171D] text-gray-300 py-12 px-6 overflow-hidden">
+    <footer id="footer" className="bg-[#16171D] text-gray-300 py-12 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[70%_15%_15%] gap-10">
         {/* === Left: Logo & Address === */}
         <div>

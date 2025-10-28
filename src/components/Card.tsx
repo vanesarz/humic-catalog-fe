@@ -14,10 +14,10 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) => {
   const cardContent = (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+    <div className="h-80 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       {/* Thumbnail */}
       <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-        <div className="w-32 h-32 rounded-full overflow-hidden relative">
+        <div className="w-full h-full rounded-0 overflow-hidden relative">
           <Image
             src={image}
             alt={title}
@@ -33,7 +33,6 @@ const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) =
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
         {category && <p className="text-xs text-gray-400 mt-2">{category}</p>}
-        <p className="text-xs text-gray-400 mt-1">RC HUMIC</p>
       </div>
     </div>
   );

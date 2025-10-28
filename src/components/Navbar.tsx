@@ -10,7 +10,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex">
           <Image
-            src="/logo-humic.png"
+            src="/logo-humic-text.png"
             alt="Logo Humic"
             width={151}
             height={63}
@@ -38,7 +38,7 @@ export default function Navbar() {
         </div>
 
         {/* Contact Us Button */}
-        <Button href="/contact" className="p-6 font-bold">
+        <Button href="/?scrollTo=footer" className="p-6 font-bold">
           Contact Us
         </Button>
 

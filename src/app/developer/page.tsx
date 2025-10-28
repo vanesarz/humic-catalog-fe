@@ -24,7 +24,7 @@ export default function DeveloperPage() {
     {
       name: "M Hafid Sukarno",
       role: "Back-end Developer",
-      img: "/images/hafid.jpg", 
+      img: "/images/hafid.png", 
       linkedin: "https://www.linkedin.com/in/hafidsukarno",
       username: "hafidsukarno",
     },
