@@ -1,44 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 
-const categories = ["All Projects", "Internship Projects", "Research Projects"];
+const categories = ["All Projects", "Internship Project", "Research Project"];
 
-const projects = [
-  {
-    title: "Digital Stethoscope",
-    subtitle: "Visual Observation Heart Sounds",
-    image: "/images/thumbnail.png",
-    category: "Research Projects",
-    slug: "digital-stethoscope",
-  },
-  {
-    title: "SiHEDAF",
-    subtitle: "Atrial Fibrillation Detector",
-    image: "/images/thumbnail.png",
-    category: "Research Projects",
-    slug: "sihedaf",
-  },
-  {
-    title: "Antropometri Kit",
-    subtitle: "Observations of Weight, Height, Head Circumference...",
-    image: "/images/thumbnail.png",
-    category: "Internship Projects",
-    slug: "antropometri-kit",
-  },
-  {
-    title: "AMons",
-    subtitle: "Arrhythmia Monitoring System",
-    image: "/images/thumbnail.png",
-    category: "Research Projects",
-    slug: "amons",
-  },
-];
+type Project = {
+  id: number;
+  title: string;
+  slug: string;
+  subtitle?: string | null;
+  category: "Research Project" | "Internship Project";
+  description?: string | null;
+  file_path?: string | null;
+  thumbnail_path?: string | null;
+  admin_id: number;
+  created_at?: string;
+  updated_at?: string;
+};
 
 export default function ProjectsSection() {
   const [selected, setSelected] = useState("All Projects");
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch(
+          "https://catalog-api.humicprototyping.net/api/public/products"
+        );
+        const data = await res.json();
+        setProjects(data?.data || []); // asumsi API Laravel pakai resource collection
+      } catch (err) {
+        console.error("error fetching products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const filtered =
     selected === "All Projects"
@@ -51,7 +54,7 @@ export default function ProjectsSection() {
         Explore All Projects
       </h2>
 
-      {/* Tabs pakai Button */}
+      {/* Tabs */}
       <div className="flex flex-wrap justify-center gap-4 mb-10">
         {categories.map((cat) => (
           <Button
@@ -69,19 +72,33 @@ export default function ProjectsSection() {
         ))}
       </div>
 
-      {/* Grid of cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full px-6">
-        {filtered.map((p, i) => (
-          <Card
-            key={i}
-            title={p.title}
-            subtitle={p.subtitle}
-            image={p.image}
-            category={p.category}
-            href={`/catalog/${p.slug}`}
-          />
-        ))}
-      </div>
+      {/* Loading state */}
+      {loading ? (
+        <p className="text-gray-500 text-sm">Loading projects...</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full px-6">
+          {filtered.length > 0 ? (
+            filtered.map((p) => (
+              <Card
+                key={p.id}
+                title={p.title}
+                subtitle={p.subtitle || ""}
+                image={
+                  p.thumbnail_path
+                    ? `https://catalog-api.humicprototyping.net/storage/${p.thumbnail_path}`
+                    : "/images/thumbnail.png"
+                }
+                category={p.category}
+                href={`/catalog/${p.slug}`}
+              />
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500">
+              No projects found.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* See more button */}
       <Button

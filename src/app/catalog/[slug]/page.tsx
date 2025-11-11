@@ -43,14 +43,32 @@ export default function ProjectDetail({ params }: { params: { slug: string } }) 
 
   if (!project) {
     return (
-      <div className="p-10 text-center text-gray-600">
-        <p>Project not found.</p>
-        <Link href="/catalog">
-          <Button variant="primary" className="mt-4">
-            Back to Projects
-          </Button>
-        </Link>
-      </div>
+      <section>
+        <Navbar />
+          <section className="bg-gray-50 py-16 px-8 flex justify-center mt-20">
+          <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6">
+            <div className="flex-1 bg-white shadow-sm rounded-xl p-6 border border-gray-200 place-content-center">
+            <div className="lg:flex-row gap-6 place-self-center">
+              <p className="mb-6 ">Project not found.</p>
+              <Link href="/catalog">
+                <Button variant="primary">
+                  Back to Projects
+                </Button>
+              </Link>
+            </div>
+            </div>
+          </div>
+          </section>
+        <Footer />
+      </section>
+      // <div className="p-10 text-center text-gray-600">
+      //   <p>Project not found.</p>
+      //   <Link href="/catalog">
+      //     <Button variant="primary" className="mt-4">
+      //       Back to Projects
+      //     </Button>
+      //   </Link>
+      // </div>
     );
   }
 

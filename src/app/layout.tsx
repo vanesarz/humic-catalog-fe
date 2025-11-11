@@ -9,8 +9,13 @@ const openSans = Open_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Humic Engineering - Catalog",
+  title: "Catalog Humic Engineering",
   description: "Humic Engineering",
+  icons: {
+    icon: [
+      { rel: "icon", url: "/logo-humic-1.png", type: "image/png" }
+    ],
+  },
 };
 
 export default function RootLayout({

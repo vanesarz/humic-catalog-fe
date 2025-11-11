@@ -1,25 +1,53 @@
 "use client";
 
 import { useState } from "react";
-import Button from '@/components/Button';
+import { useRouter } from "next/navigation";
+import Button from "@/components/Button";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [form, setForm] = useState<{ email: string; password: string }>({
     email: "",
     password: "",
   });
 
+  const [remember, setRemember] = useState(false);
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const [remember, setRemember] = useState(false);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // sementara console.log dulu, nanti bisa dikirim ke backend
-    console.log("Login Data:", form);
-    alert("Login successful!");
+    setLoading(true);
+
+    try {
+      const res = await fetch("https://catalog-api.humicprototyping.net/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // simpen token dan data user
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("admin", JSON.stringify(data.admin));
+
+        alert("Login berhasil!");
+        router.push("/admin/dashboard"); // redirect ke halaman dashboard
+      } else {
+        alert(data.message || "Login gagal. Periksa email dan password kamu.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Terjadi kesalahan saat login.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,7 +57,7 @@ export default function LoginPage() {
           Login
         </h1>
 
-        <hr className="place-self-center w-20 border-3 border-red-800 mb-6"/>
+        <hr className="place-self-center w-20 border-3 border-red-800 mb-6" />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="text-base text-gray-700">Email Address</label>
@@ -60,16 +88,19 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="mr-2 accent-gray-700 mb-4 "
+                className="mr-2 accent-gray-700 mb-4"
               />
               Remember me
             </label>
-            {/* <a href="#" className="text-sm text-gray-600 hover:underline">
-              Forgot password?
-            </a> */}
           </div>
 
-          <Button type="submit" href="/contact" className="w-full">Login to Admin Dashboard</Button>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login to Admin Dashboard"}
+          </Button>
         </form>
       </div>
     </div>

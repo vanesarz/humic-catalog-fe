@@ -27,7 +27,7 @@ export default function Footer() {
 
           <div className="space-y-1 text-sm">
             <p className="font-semibold text-white">
-              Gedung Kultubai Selatan, Blok F
+              Gedung Kultubai Selatan, Gedung F
             </p>
             <p>Jl. Telekomunikasi, Terusan Buah Batu Bandung</p>
             <p>Jawa Barat, Indonesia. 40257</p>
