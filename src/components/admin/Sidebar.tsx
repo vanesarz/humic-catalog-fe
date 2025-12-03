@@ -1,18 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   Briefcase,
   FlaskConical,
   Users,
   UserCircle,
+  ChevronUp,
+  LogOut,
 } from "lucide-react";
-import Image from "next/image";
+import { useState, useEffect, useRef } from "react";
+import { deleteCookie } from "cookies-next";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const admin = typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem("admin") || "{}")
+    : {};
 
   const navItems = [
     {
@@ -35,25 +46,43 @@ export default function Sidebar() {
       href: "/admin/partners",
       icon: <Users className="w-5 h-5" />,
     },
-    {
-      name: "Profile",
-      href: "/admin/profile",
-      icon: <UserCircle className="w-5 h-5" />,
-    },
   ];
 
+  // close dropdown kalo klik di luar area dropdown
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleLogout = () => {
+    deleteCookie("token");
+    localStorage.removeItem("token");
+    localStorage.removeItem("admin");
+
+    router.push("/login");
+  };
+
+  const initials =
+    admin?.name
+      ?.split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase() || "AD";
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col py-6">
+    <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col py-6 relative">
       {/* Header */}
       <div className="flex items-center gap-3 px-6 mb-6">
         <div className="w-10 h-10 bg-red-700 rounded-lg flex items-center justify-center">
-          <Image
-            src="/logo-humic-1.png"
-            alt="Humic Logo"
-            width={28}
-            height={28}
-            className="object-contain"
-          />
+          <Briefcase className="w-5 h-5 text-white" />
         </div>
         <div>
           <h1 className="font-semibold text-gray-800 text-sm">Catalog Admin</h1>
@@ -90,6 +119,61 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* USER BUTTON */}
+      <div className="relative px-4 mt-auto" ref={dropdownRef}>
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full flex items-center gap-3 bg-red-50 hover:bg-red-100 transition p-3 rounded-xl shadow-sm border border-red-100"
+        >
+          <div className="w-10 h-10 rounded-full bg-red-700 text-white flex items-center justify-center font-bold">
+            {initials}
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold text-gray-800">
+              {admin?.name || "Admin User"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {admin?.email || "admin@example.com"}
+            </p>
+          </div>
+          <ChevronUp
+            className={`w-4 h-4 text-gray-600 transition ${
+              dropdownOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {/* DROPDOWN MENU */}
+        {dropdownOpen && (
+          <div className="absolute left-4 right-4 bottom-20 bg-white shadow-xl border border-gray-200 rounded-xl py-3 z-40">
+            <div className="px-4 pb-3 border-b border-gray-200">
+              <p className="font-semibold text-gray-900 text-sm">
+                {admin?.name || "Admin User"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {admin?.email || "admin@example.com"}
+              </p>
+            </div>
+
+            <Link
+              href="/admin/profile"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-sm text-gray-700"
+            >
+              <UserCircle className="w-5 h-5 text-gray-600" />
+              Profile Settings
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50"
+            >
+              <LogOut className="w-5 h-5" />
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
     </aside>
   );
 }

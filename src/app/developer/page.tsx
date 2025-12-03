@@ -34,12 +34,25 @@ export default function DeveloperPage() {
     <section>
       <Navbar />
       <section className="min-h-screen bg-gray-50 flex flex-col items-center py-20">
-        {/* Judul utama */}
-        <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-900 relative inline-block">
-            Our Developer
-            <span className="absolute left-0 bottom-0 w-full h-1 bg-[#B4252A] rounded-md mt-1"></span>
-          </h2>
+      
+        <div className="relative w-full text-center mb-10">
+          {/* gambar header */}
+          <div className="w-full h-[160px] overflow-hidden">
+            <Image
+              src={"/header.png"}
+              alt={"Header"}
+              width={208}
+              height={256}
+              className="object-cover w-full h-full"
+            />
+          </div>
+
+          <div className="text-center inline">
+            <h2 className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-white">
+              Our Developer
+              <span className="absolute w-40 h-1 bg-[#B4252A] rounded-md mt-12"></span>
+            </h2>
+          </div>
         </div>
 
         {/* Subjudul */}

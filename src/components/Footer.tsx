@@ -36,14 +36,14 @@ export default function Footer() {
           {/* Social Icons */}
           <div className="flex gap-4 mt-5">
             <Link
-              href="https://instagram.com"
+              href="https://www.instagram.com/humicengineering"
               target="_blank"
               className="border border-gray-400 rounded-full p-2 hover:bg-gray-700 transition"
             >
               <Instagram className="w-5 h-5 text-white" />
             </Link>
             <Link
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/company/humic-engineering/about"
               target="_blank"
               className="border border-gray-400 rounded-full p-2 hover:bg-gray-700 transition"
             >

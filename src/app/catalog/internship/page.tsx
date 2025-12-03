@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Card from "@/components/Card";
+import { Card, Header } from "@/components";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Navbar, Footer } from "@/components";
 
 const internshipProjects = [
   { title: "Digital Stethoscope", subtitle: "Visual Observation Heart Sounds", image: "/images/thumbnail.png" },
@@ -38,15 +37,8 @@ export default function InternshipCatalog() {
   const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
 
   return (
-    <section className="min-h-screen bg-gray-50 flex flex-col items-center py-16 mt-18">
-      <Navbar />
-      {/* ===== Header ===== */}
-      <div className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-          Internship Projects
-        </h1>
-        <hr className="w-44 border-2 border-red-800 mt-3 mx-auto rounded-full" />
-      </div>
+    <section className="min-h-screen w-screen bg-gray-50 flex flex-col items-center mt-14">
+      <Header title="Internship Projects" />
 
       {/* ===== Cards Grid ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full px-6">
@@ -63,7 +55,7 @@ export default function InternshipCatalog() {
       </div>
 
       {/* ===== Pagination ===== */}
-      <div className="flex items-center justify-center mt-12 gap-2">
+      <div className="flex items-center justify-center my-8 gap-2">
         <button
           onClick={handlePrev}
           disabled={page === 1}
@@ -102,8 +94,6 @@ export default function InternshipCatalog() {
           <ChevronRight className="w-5 h-5 text-gray-700" />
         </button>
       </div>
-      
-      <Footer />
     </section>
   );
 }

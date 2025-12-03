@@ -31,7 +31,7 @@ const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) =
       {/* Text content */}
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{subtitle}</p>
         {category && <p className="text-xs text-gray-400 mt-2">{category}</p>}
       </div>
     </div>

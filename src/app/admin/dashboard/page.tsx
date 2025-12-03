@@ -1,22 +1,80 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Briefcase, FlaskConical, Users } from "lucide-react";
 
 export default function DashboardPage() {
-  const stats = [
+  const [stats, setStats] = useState({
+    internships: 0,
+    research: 0,
+    partners: 0,
+  });
+
+  const [loading, setLoading] = useState(true);
+
+  const fetchWithAuth = async (url: string) => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) throw new Error("No token");
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error("API error");
+    }
+
+    return res.json();
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [internshipRes, researchRes, partnersRes] = await Promise.all([
+          fetchWithAuth(
+            "https://catalog-api.humicprototyping.net/api/admin/products?type=internship"
+          ),
+          fetchWithAuth(
+            "https://catalog-api.humicprototyping.net/api/admin/products?type=research"
+          ),
+          fetchWithAuth(
+            "https://catalog-api.humicprototyping.net/api/admin/partners"
+          ),
+        ]);
+
+        setStats({
+          internships: internshipRes.data?.length ?? 0,
+          research: researchRes.data?.length ?? 0,
+          partners: partnersRes.data?.length ?? 0,
+        });
+      } catch (err) {
+        console.error("Failed loading dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const cards = [
     {
       title: "Total Internships",
-      value: 3,
+      value: stats.internships,
       icon: <Briefcase className="w-5 h-5 text-red-700" />,
     },
     {
-      title: "Total Research",
-      value: 3,
+      title: "Total Researchs",
+      value: stats.research,
       icon: <FlaskConical className="w-5 h-5 text-red-700" />,
     },
     {
       title: "Total Partners",
-      value: 4,
+      value: stats.partners,
       icon: <Users className="w-5 h-5 text-red-700" />,
     },
   ];
@@ -39,22 +97,32 @@ export default function DashboardPage() {
 
       {/* Statistic Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((item, index) => (
-          <div
-            key={index}
-            className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700">
-                {item.title}
-              </h3>
-              {item.icon}
-            </div>
-            <p className="text-2xl font-bold text-gray-800 mt-3">
-              {item.value}
-            </p>
-          </div>
-        ))}
+        {loading
+          ? [...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm animate-pulse"
+              >
+                <div className="h-5 bg-gray-200 w-24 rounded"></div>
+                <div className="h-8 bg-gray-300 w-16 rounded mt-4"></div>
+              </div>
+            ))
+          : cards.map((item, idx) => (
+              <div
+                key={idx}
+                className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    {item.title}
+                  </h3>
+                  {item.icon}
+                </div>
+                <p className="text-2xl font-bold text-gray-800 mt-3">
+                  {item.value}
+                </p>
+              </div>
+            ))}
       </div>
 
       {/* Recent Activity */}
