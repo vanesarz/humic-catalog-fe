@@ -9,7 +9,7 @@ interface CardProps {
   subtitle: string;
   image: string;
   category?: string;
-  href?: string; // link ke halaman detail
+  href?: string;
 }
 
 const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) => {

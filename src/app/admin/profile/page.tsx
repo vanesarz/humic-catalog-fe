@@ -13,8 +13,8 @@ interface AdminProfile {
 }
 
 export default function ProfilePage() {
-  // const baseURL = "https://catalog-api.humicprototyping.net/api";
-  const baseURL = "http://localhost:8000/api";
+  const baseURL = "https://catalog-api.humicprototyping.net/api";
+  // const baseURL = "http://localhost:8000/api";
   const token = getCookie("token") as string | undefined;
 
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
@@ -90,12 +90,13 @@ export default function ProfilePage() {
   }
 
   // initials fallback
-  const initials =
-    admin?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || "AD";
+  const initials = admin?.name
+    ? admin.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "AD";
 
   const imageSrc =
     imagePreview ??

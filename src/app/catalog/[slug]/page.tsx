@@ -1,171 +1,158 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button, Header } from "@/components";
 
-const projects = [
-  {
-    slug: "digital-stethoscope",
-    title: "Digital Stethoscope",
-    category: "Research Project",
-    description:
-      "A digital stethoscope is an innovative tool used to visually observe heart sounds without the need to rely on the sense of hearing. It focuses on utilizing sound signals specifically to detect heart valve disease.",
-    manual: "https://docs.example.digitalstetoscope-research",
-    link: "https://www.example.digitalstetoscope-research",
-    image: "/images/thumbnail.png",
-  },
-  {
-    slug: "sihedaf",
-    title: "SiHeDAF",
-    category: "Research Project",
-    description:
-      "Atrial Fibrillation Detector (SiHeDAF) is a portable system designed to detect arrhythmia based on heart signal monitoring.",
-    manual: "https://docs.example.digitalstetoscope-research",
-    link: "https://www.example.digitalstetoscope-research",
-    image: "/images/thumbnail.png",
-  },
-  {
-    slug: "antropometri-kit",
-    title: "Antropometri Kit",
-    category: "Internship Project",
-    description:
-      "A measurement kit to monitor infant growth through observation of weight, height, head circumference, and nutrition by age.",
-    manual: "https://docs.example.digitalstetoscope-research",
-    link: "https://www.example.digitalstetoscope-research",
-    image: "/images/thumbnail.png",
-  },
-];
+interface ApiProduct {
+  title?: string;
+  description?: string;
+  thumbnail_path?: string;
+  slug: string;
+  category?: string;
+  file_path?: string;
+  user_manual?: string;
+  file_url?: string;
+}
 
 export default function ProjectDetail({ params }: { params: { slug: string } }) {
-  const project = projects.find((p) => p.slug === params.slug);
-  const otherProjects = projects.filter((p) => p.slug !== params.slug);
+  const { slug } = params;
 
-  if (!project) {
+  const [project, setProject] = useState<ApiProduct | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProjectBySlug = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(
+          "https://catalog-api.humicprototyping.net/api/public/products"
+        );
+
+        const data = await res.json();
+
+        if (!Array.isArray(data?.data)) {
+          throw new Error("Invalid API response");
+        }
+
+        const projectFound = (data.data as ApiProduct[]).find(
+          (item) => item.slug === slug
+        );
+
+        if (!projectFound) throw new Error("Project not found");
+
+        setProject(projectFound);
+      } catch (err) {
+        console.error(err);
+        setError(err instanceof Error ? err.message : "Failed to load project");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectBySlug();
+  }, [slug]);
+
+  if (loading) {
     return (
-      <section>
-        <section className="bg-gray-50 py-16 px-8 flex justify-center mt-20">
-          <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6">
-            <div className="flex-1 bg-white shadow-sm rounded-xl p-6 border border-gray-200 place-content-center">
-            <div className="lg:flex-row gap-6 place-self-center">
-              <p className="mb-6 ">Project not found.</p>
-              <Link href="/catalog">
-                <Button variant="primary">
-                  Back to Projects
-                </Button>
-              </Link>
-            </div>
-            </div>
-          </div>
-        </section>
+      <section className="min-h-screen w-screen flex items-center justify-center">
+        Loading...
       </section>
-      // <div className="p-10 text-center text-gray-600">
-      //   <p>Project not found.</p>
-      //   <Link href="/catalog">
-      //     <Button variant="primary" className="mt-4">
-      //       Back to Projects
-      //     </Button>
-      //   </Link>
-      // </div>
     );
   }
 
+  if (error || !project) {
+    return (
+      <section className="min-h-screen w-screen flex items-center justify-center">
+        <div className="text-center p-6 bg-white rounded-xl shadow-md">
+          <p className="mb-4 text-gray-700">{error || "Project not found."}</p>
+          <Link href="/catalog">
+            <Button variant="primary">Back to Projects</Button>
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  const imageUrl = project.thumbnail_path
+    ? project.thumbnail_path.startsWith("http")
+      ? project.thumbnail_path
+      : `https://catalog-api.humicprototyping.net/${project.thumbnail_path}`
+    : "/images/thumbnail.png";
+
   return (
     <section className="min-h-screen w-screen bg-gray-50 flex flex-col items-center mt-14">
-      <Header title="Internship Projects" />
+      <Header title={project.title || "Project Detail"} />
 
-      <section className="bg-gray-50 flex justify-center mt-0">
-      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6">
-          {/* Left: Project Detail */}
-          <div className="flex-1 bg-white shadow-sm rounded-xl p-6 border border-gray-200">
-            <div className="flex flex-col gap-6">
+      <div className="max-w-6xl w-full flex flex-col lg:flex-row gap-6 mt-6 px-6">
+        <div className="flex-1 bg-white shadow-sm rounded-xl p-6 border border-gray-200">
+          <div className="flex flex-col gap-6">
+            <div className="w-full bg-gray-100 rounded-xl overflow-hidden">
+              <Image
+                src={imageUrl}
+                alt={project.title || "Project Image"}
+                width={800}
+                height={400}
+                className="rounded-xl object-cover w-full h-80"
+              />
+            </div>
 
-              {/* GAMBAR FULL DI ATAS */}
-              <div className="w-full bg-gray-100 rounded-xl overflow-hidden">
-                <Image
-                  src={project.image}
-                  alt={project.title}
-                  width={800}
-                  height={80}
-                  className="rounded-xl object-cover w-full h-80"
-                />
-              </div>
+            <div className="text-gray-800">
+              <h2 className="text-2xl font-bold text-red-700 mb-2">
+                {project.title}
+              </h2>
 
-              {/* DETAIL DI BAWAH GAMBAR */}
-              <div className="text-gray-800">
-                <h2 className="text-2xl font-bold text-red-700 mb-2">
-                  {project.title}
-                </h2>
+              <p className="text-sm font-semibold mb-2">
+                Category:{" "}
+                <span className="font-normal text-gray-700">
+                  {project.category || "N/A"}
+                </span>
+              </p>
 
+              <p className="text-sm font-semibold mb-2">
+                Description:{" "}
+                <span className="font-normal text-gray-700">
+                  {project.description || "-"}
+                </span>
+              </p>
+
+              {project.user_manual && (
                 <p className="text-sm font-semibold mb-2">
-                  Category :{" "}
-                  <span className="font-normal text-gray-700">
-                    {project.category}
-                  </span>
-                </p>
-
-                <p className="text-sm font-semibold mb-2">
-                  Description :{" "}
-                  <span className="font-normal text-gray-700">
-                    {project.description}
-                  </span>
-                </p>
-
-                <p className="text-sm font-semibold mb-2">
-                  User Manual :{" "}
+                  User Manual:{" "}
                   <Link
-                    href={project.manual}
+                    href={project.user_manual}
                     target="_blank"
                     className="font-normal text-blue-600 underline hover:text-blue-800"
                   >
-                    {project.manual}
+                    {project.user_manual}
                   </Link>
                 </p>
+              )}
 
+              {project.file_url && (
                 <p className="text-sm font-semibold mb-4">
-                  Project Link :{" "}
+                  Project Link:{" "}
                   <Link
-                    href={project.link}
+                    href={project.file_url}
                     target="_blank"
                     className="font-normal text-blue-600 underline hover:text-blue-800"
                   >
-                    {project.link}
+                    {project.file_url}
                   </Link>
                 </p>
+              )}
 
-                <Button variant="primary" className="w-full">Open Project</Button>
-              </div>
-
+              <Button variant="primary" className="w-full">
+                Open Project
+              </Button>
             </div>
           </div>
-
-          {/* Right: Other Projects */}
-          <div className="w-full lg:w-1/3 bg-white shadow-sm rounded-xl p-6 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 border-b-2 border-red-600 pb-1 mb-4">
-              Other Projects
-          </h3>
-          <div className="space-y-4">
-              {otherProjects.map((p) => (
-              <Link
-                  key={p.slug}
-                  href={`/catalog/${p.slug}`}
-                  className="flex items-center gap-4 hover:bg-gray-50 p-2 rounded-lg transition"
-              >
-                  <div className="w-20 h-28 rounded-xl overflow-hidden relative flex-shrink-0">
-                  <Image
-                      src={p.image}
-                      alt={p.title}
-                      fill
-                      className="object-cover"
-                  />
-                  </div>
-                  <span className="font-semibold text-gray-900">{p.title}</span>
-              </Link>
-              ))}
-          </div>
-          </div>
+        </div>
       </div>
-      </section>
     </section>
   );
 }

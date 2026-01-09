@@ -9,9 +9,13 @@ import { Partner } from "../types";
 
 interface EditPartnerProps {
   open: boolean;
-  onClose: () => void;
   data: Partner | null;
-  onConfirm: (slug: string, newName: string, newFile?: File) => Promise<void>;
+  onClose: () => void;
+  onConfirm: (
+    slug: string,
+    newName: string,
+    newFile?: File
+  ) => Promise<void>;
 }
 
 export default function EditPartner({ open, onClose, data, onConfirm }: EditPartnerProps) {

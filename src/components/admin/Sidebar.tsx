@@ -21,9 +21,15 @@ export default function Sidebar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const admin = typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("admin") || "{}")
-    : {};
+  const [adminState, setAdminState] = useState<{ name?: string; email?: string } | null>(null);
+
+  // ambil admin dari localStorage setelah component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedAdmin = localStorage.getItem("admin");
+      if (storedAdmin) setAdminState(JSON.parse(storedAdmin));
+    }
+  }, []);
 
   const navItems = [
     {
@@ -70,12 +76,13 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const initials =
-    admin?.name
-      ?.split(" ")
-      .map((n: string) => n[0])
-      .join("")
-      .toUpperCase() || "AD";
+  const initials = adminState?.name
+    ? adminState.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+    : "AD";
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 h-screen flex flex-col py-6 relative">
@@ -131,10 +138,10 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 text-left">
             <p className="text-sm font-semibold text-gray-800">
-              {admin?.name || "Admin User"}
+              {adminState?.name || "Admin User"}
             </p>
             <p className="text-xs text-gray-500">
-              {admin?.email || "admin@example.com"}
+              {adminState?.email || "admin@gmail.com"}
             </p>
           </div>
           <ChevronUp
@@ -148,12 +155,8 @@ export default function Sidebar() {
         {dropdownOpen && (
           <div className="absolute left-4 right-4 bottom-20 bg-white shadow-xl border border-gray-200 rounded-xl py-3 z-40">
             <div className="px-4 pb-3 border-b border-gray-200">
-              <p className="font-semibold text-gray-900 text-sm">
-                {admin?.name || "Admin User"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {admin?.email || "admin@example.com"}
-              </p>
+              <p className="font-semibold text-gray-900 text-sm">{adminState?.name || "Admin User"}</p>
+              <p className="text-xs text-gray-500">{adminState?.email || "admin@gmail.com"}</p>
             </div>
 
             <Link

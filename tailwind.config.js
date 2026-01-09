@@ -1,6 +1,5 @@
-import { Config } from 'tailwindcss'
-
-export default Config({
+/** @type {import('tailwindcss').Config} */
+const config = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -13,7 +12,7 @@ export default Config({
         secondary: "var(--color-secondary)",
         accent: "var(--color-accent)",
         muted: "var(--color-muted)",
-        text: "var(--color-text)"
+        text: "var(--color-text)",
       },
       fontFamily: {
         sans: ['var(--font-open-sans)', 'sans-serif'],
@@ -21,4 +20,6 @@ export default Config({
     },
   },
   plugins: [],
-})
+};
+
+export default config;

@@ -1,22 +1,22 @@
 // src/app/partners/components/DeletePartner.tsx
 import { useState } from "react";
-import { Partner } from "../types";
+import { Research } from "../types";
 import Dialog from "@/components/Dialog";
 import Button from "@/components/Button";
 
-interface DeletePartnerProps {
+interface DeleteResearchProps {
   open: boolean;
   onClose: () => void;
-  data: Partner | null;
+  data: Research | null;
   onConfirm: (slug: string) => Promise<void>;
 }
 
-export default function DeletePartner({
+export default function DeleteResearch({
   open,
   onClose,
   data,
   onConfirm,
-}: DeletePartnerProps) {
+}: DeleteResearchProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,14 +27,14 @@ export default function DeletePartner({
       setLoading(true);
       setError(null);
 
-      console.log("deleting partner with slug:", data.slug);
+      console.log("deleting research with slug:", data.slug);
 
       await onConfirm(data.slug);
 
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Failed to delete partner. Please try again.");
+      setError("Failed to delete research. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -46,8 +46,7 @@ export default function DeletePartner({
         <h2 className="text-xl font-semibold mb-3">Are you sure?</h2>
 
         <p className="text-sm text-gray-500 mt-3">
-          This action cannot be undone. This will permanently delete the partner
-          organization.
+          This action cannot be undone. This will permanently delete the research project.
         </p>
 
         {error && (

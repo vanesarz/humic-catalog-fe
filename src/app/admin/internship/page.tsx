@@ -1,425 +1,357 @@
 "use client";
 
 import Image from "next/image";
-import { Edit2, Trash2, Plus, Upload, Link as LinkIcon } from "lucide-react";
-import { useState, useRef, ChangeEvent, useEffect, useCallback } from "react";
-import { getCookie } from "cookies-next";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Eye, Edit2, Trash2, Plus } from "lucide-react";
+import { RawInternship, Internship } from "./types";
 
-/* -----------------------------------------
-   TYPES
------------------------------------------ */
-interface Admin {
-  name: string;
-}
+// COMPONENTS
+import CreateInternship from "./components/CreateInternship";
+import ViewInternship from "./components/ViewInternship";
+import EditInternship from "./components/EditInternship";
+import DeleteInternship from "./components/DeleteInternship";
 
-interface InternshipItem {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  created_at: string;
-  thumbnail_path: string | null;
-  admin: Admin | null;
-  slug: string;
-}
+// API
+const API_BASE = "https://catalog-api.humicprototyping.net";
+const API_URL = `${API_BASE}/api`;
 
-/* -----------------------------------------
-   COMPONENT
------------------------------------------ */
+// ADAPTER (NORMALIZE DATA DARI API)
+const adaptInternships = (raw: RawInternship[]): Internship[] => {
+  return raw.map((item) => ({
+    id: item.id,
+    title: item.title,
+    slug: item.slug ?? item.title.toLowerCase().replace(/\s+/g, "-"),
+    description: item.description ?? "",
+    category: item.category,
+    thumbnail: item.thumbnail_path
+      ? `${API_BASE}/storage/${item.thumbnail_path}`
+      : null,
+    user_manual: item.user_manual ?? "",
+    file: item.file_path ?? "",
+    file_url: item.file_url ?? "",
+  }));
+};
+
+// INTERNSHIP CATALOG
 export default function InternshipCatalog() {
-  // const baseURL = "https://catalog-api.humicprototyping.net/api";
-  const baseURL = "http://localhost:8000/api";
-  const token = getCookie("token") as string | undefined;
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"files" | "link">("files");
-  const [internships, setInternships] = useState<InternshipItem[]>([]);
+  const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const [formTitle, setFormTitle] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formLink, setFormLink] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  // CRUD POPUP
+  const [showPopup, setShowPopup] = useState(false);
+  const [editingInternship, setEditingInternship] = useState<Internship | null>(null);
+  const [viewingInternship, setViewingInternship] = useState<Internship | null>(null);
+  const [viewSlug, setViewSlug] = useState<string | null>(null);
+  const [deletingInternship, setDeletingInternship] = useState<Internship | null>(null);
 
-  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  // FETCH WITH AUTH
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+    });
 
-  /* -----------------------------------------
-     FETCH INTERNSHIPS (ADMIN)
-  ----------------------------------------- */
+    if (!res.ok) {
+      const text = await res.text();
+      console.error("API ERROR:", res.status, text);
+      throw new Error(`API error ${res.status}`);
+    }
+
+    return res.json();
+  };
+
+  // FETCH INTERNSHIPS
   const fetchInternships = useCallback(async () => {
-    setLoading(true);
     try {
-      const res = await fetch(`${baseURL}/admin/products`, {
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
+      const json = await fetchWithAuth(`${API_URL}/admin/products/internship`);
+      const raw = json?.data as RawInternship[] | undefined;
 
-      if (!res.ok) {
-        console.error("Failed fetch internships");
-        setLoading(false);
-        return;
+      if (Array.isArray(raw)) {
+        setInternships(adaptInternships(raw));
       }
-
-      const data = await res.json();
-      const internshipItems: InternshipItem[] = data.data.filter(
-        (item: InternshipItem) => item.category === "Internship Project"
-      );
-
-      setInternships(internshipItems);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchInternships();
   }, [fetchInternships]);
 
+  // FETCH INTERNSHIP DETAILS
+  useEffect(() => {
+    if (!viewSlug) return;
+
+    const loadDetail = async () => {
+      try {
+        const res = await fetchWithAuth(
+          `${API_URL}/admin/products/internship/${viewSlug}`
+        );
+
+        const d = res.data;
+
+        setViewingInternship({
+          ...d,
+          slug: viewSlug,
+          thumbnail: d.thumbnail
+            ? `${API_BASE}/storage/${d.thumbnail}`
+            : null,
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    loadDetail();
+  }, [viewSlug]);
+
+  // HELPERS
   const filteredInternships = internships.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  /* -----------------------------------------
-     FILE UPLOAD HANDLER
-  ----------------------------------------- */
-  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    setSelectedFiles(files);
-  };
-
-  /* -----------------------------------------
-     CREATE / UPDATE INTERNSHIP
-  ----------------------------------------- */
-  const handleSave = async () => {
-    const formData = new FormData();
-    formData.append("title", formTitle);
-    formData.append("description", formDescription);
-    formData.append("category", "Internship Project");
-
-    if (activeTab === "link") {
-      formData.append("link", formLink);
-    }
-
-    if (selectedFiles) {
-      Array.from(selectedFiles).forEach((file) => {
-        formData.append("files[]", file);
-      });
-    }
-
-    try {
-      let res;
-      if (editingSlug) {
-        // UPDATE
-        res = await fetch(`${baseURL}/admin/products/${editingSlug}`, {
-          method: "PUT",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-          body: formData,
-        });
-      } else {
-        // CREATE
-        res = await fetch(`${baseURL}/admin/products`, {
-          method: "POST",
-          headers: { Authorization: token ? `Bearer ${token}` : "" },
-          body: formData,
-        });
-      }
-
-      const data = await res.json();
-      console.log("Saved:", data);
-      fetchInternships();
-      setShowModal(false);
-      setFormTitle("");
-      setFormDescription("");
-      setFormLink("");
-      setSelectedFiles(null);
-      setEditingSlug(null);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  /* -----------------------------------------
-     DELETE INTERNSHIP
-  ----------------------------------------- */
-  const handleDelete = async (slug: string) => {
-    if (!confirm("Are you sure want to delete this internship?")) return;
-
-    try {
-      const res = await fetch(`${baseURL}/admin/products/${slug}`, {
-        method: "DELETE",
-        headers: { Authorization: token ? `Bearer ${token}` : "" },
-      });
-      const data = await res.json();
-      console.log("Deleted:", data);
-      fetchInternships();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  /* -----------------------------------------
-     EDIT INTERNSHIP
-  ----------------------------------------- */
-  const handleEdit = (item: InternshipItem) => {
-    setEditingSlug(item.slug);
-    setFormTitle(item.title);
-    setFormDescription(item.description);
-    setFormLink(""); // optional, fetch link separately if exists
-    setShowModal(true);
-  };
-
+  // RENDER
   return (
-    <div className="p-6 space-y-6">
-      {/* Breadcrumb */}
-      <div className="text-sm text-gray-500">
-        <span className="font-medium">Admin Panel</span> &gt;{" "}
-        <span className="text-gray-700 font-semibold">Internship Catalog</span>
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">Internship Catalog</h1>
-          <p className="text-sm text-gray-500">Manage all internship programs</p>
+    <div className="p-6 flex flex-col h-screen">
+      <div className="space-y-6 shrink-0">
+        {/* Breadcrumb */}
+        <div className="text-sm text-gray-500">
+          <span className="font-medium">Admin Panel</span> &gt;{" "}
+          <span className="text-gray-700 font-semibold">Internship Catalog</span>
         </div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" /> Add Internship
-        </button>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-800">
+              Internship Catalog
+            </h1>
+            <p className="text-sm text-gray-500">
+              Manage all internship projects
+            </p>
+          </div>
+
+          <button
+            onClick={() => setShowPopup(true)}
+            className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" /> Add Internship
+          </button>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col flex-1 mt-6 min-h-0 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">All Internships</h2>
-            <p className="text-sm text-gray-500">A list of all internship programs</p>
+            <p className="text-sm text-gray-500">A list of all internship projects</p>
           </div>
 
           <div className="relative">
+            <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search internships..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-3 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-700 focus:outline-none"
+              className="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-700 focus:outline-none"
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left text-gray-700">
-            <thead>
-              <tr className="border-b border-gray-200 text-gray-600">
-                <th className="py-2 px-3">Image</th>
-                <th className="py-2 px-3">Product Name</th>
-                <th className="py-2 px-3">Description</th>
-                <th className="py-2 px-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-center text-gray-400">
-                    Loading…
-                  </td>
+          {loading ? (
+            <p className="text-gray-400 text-sm py-4">Loading...</p>
+          ) : (
+            <table className="w-full text-sm text-left text-gray-700">
+              <thead>
+                <tr className="border-b border-gray-200 text-gray-600">
+                  <th className="py-2 px-3 w-1/7">Image</th>
+                  <th className="py-2 px-3 w-2/7">Product Name</th>
+                  <th className="py-2 px-3 w-3/7">Description</th>
+                  <th className="py-2 px-3 text-center w-1/7">Actions</th>
                 </tr>
-              )}
+              </thead>
 
-              {!loading &&
-                filteredInternships.map((item) => (
+              <tbody>
+                {filteredInternships.map((item) => (
                   <tr
-                    key={item.id}
+                    key={item.slug}
                     className="border-b border-gray-100 hover:bg-gray-50 transition"
                   >
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3 w-1/7">
                       <div className="w-16 h-12 rounded-lg overflow-hidden relative">
-                        <Image
-                          src={
-                            item.thumbnail_path
-                              ? `https://catalog-api.humicprototyping.net/storage/${item.thumbnail_path}`
-                              : "/images/default.jpg"
-                          }
-                          alt={item.title}
-                          fill
-                          className="object-cover"
-                        />
+                        {item.thumbnail ? (
+                          <Image
+                            src={item.thumbnail}
+                            alt={item.title}
+                            fill
+                            sizes="48px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400 bg-gray-100">
+                            No Image
+                          </div>
+                        )}
                       </div>
                     </td>
-                    <td className="py-3 px-3 font-medium text-gray-900">{item.title}</td>
-                    <td className="py-3 px-3">{item.admin?.name ?? "-"}</td>
-                    <td className="py-3 px-3">
-                      {new Date(item.created_at).toLocaleDateString()}
+
+                    <td className="py-3 px-3 font-medium text-gray-900 place-content-center w-2/7">
+                      {item.title}
                     </td>
-                    <td className="py-3 px-3 truncate max-w-xs">{item.description}</td>
-                    <td className="py-3 px-3 text-right flex gap-2 justify-end">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="text-gray-600 hover:text-red-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.slug)}
-                        className="text-gray-600 hover:text-red-700"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                    <td className="py-3 px-3 font-medium text-gray-900 place-content-center w-3/7">
+                      {item.description}
+                    </td>
+
+                    <td className="py-3 px-3 text-center w-1/7">
+                      <div className="inline-flex gap-[16px]">
+                        <button
+                          className="text-gray-600 hover:text-red-700"
+                          onClick={() => setViewSlug(item.slug)}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          className="text-gray-600 hover:text-red-700"
+                          onClick={() => setEditingInternship(item)}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          className="text-gray-600 hover:text-red-700"
+                          onClick={() => setDeletingInternship(item)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
 
-              {!loading && filteredInternships.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="text-center py-6 text-gray-400 text-sm">
-                    No internship found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                {filteredInternships.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-6 text-gray-400 text-sm">
+                      No internship found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-6 relative">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute right-5 top-5 text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
+      {/* CREATE */}
+      <CreateInternship
+        open={showPopup}
+        onClose={() => setShowPopup(false)}
+        onConfirm={async (payload) => {
+          const form = new FormData();
 
-            <h2 className="text-xl font-semibold text-gray-800 mb-5">
-              {editingSlug ? "Edit Internship" : "Create New Internship"}
-            </h2>
+          form.append("title", payload.title);
+          form.append("description", payload.description);
+          form.append("user_manual", payload.manual);
+          form.append("file_url", payload.link);
 
-            <div className="grid grid-cols-2 gap-5">
-              {/* Left Form */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Title</label>
-                  <input
-                    type="text"
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    placeholder="Enter title"
-                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-700 outline-none"
-                  />
-                </div>
+          if (payload.thumbnail) {
+            form.append("thumbnail", payload.thumbnail);
+          }
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                    placeholder="Enter description"
-                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 h-24 text-sm focus:ring-2 focus:ring-red-700 outline-none resize-none"
-                  />
-                </div>
+          payload.files.forEach((file) => {
+            form.append("file", file);
+          });
 
-                <div>
-                  <label className="text-sm font-medium text-gray-700">User Manual Link (Optional)</label>
-                  <input
-                    type="text"
-                    value={formLink}
-                    onChange={(e) => setFormLink(e.target.value)}
-                    placeholder="Enter link for user manual"
-                    className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-700 outline-none"
-                  />
-                </div>
-              </div>
+          await fetchWithAuth(`${API_URL}/admin/products/internship`, {
+            method: "POST",
+            body: form,
+          });
 
-              {/* Right Form */}
-              <div>
-                <p className="text-sm font-medium text-gray-700 mb-2">Resources</p>
+          fetchInternships();
+        }}
+      />
 
-                <div className="flex gap-2 mb-3">
-                  <button
-                    onClick={() => setActiveTab("files")}
-                    className={`px-3 py-2 rounded-lg text-sm flex items-center gap-1 border ${
-                      activeTab === "files"
-                        ? "bg-red-700 text-white border-red-700"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                    }`}
-                  >
-                    <Upload className="w-4 h-4" /> Upload Files
-                  </button>
+      {/* VIEW */}
+      <ViewInternship
+        open={!!viewingInternship}
+        data={viewingInternship}
+        onClose={() => setViewingInternship(null)}
+      />
 
-                  <button
-                    onClick={() => setActiveTab("link")}
-                    className={`px-3 py-2 rounded-lg text-sm flex items-center gap-1 border ${
-                      activeTab === "link"
-                        ? "bg-red-700 text-white border-red-700"
-                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                    }`}
-                  >
-                    <LinkIcon className="w-4 h-4" /> Project Link
-                  </button>
-                </div>
+      {/* EDIT */}
+      <EditInternship
+        open={!!editingInternship}
+        data={editingInternship}
+        onClose={() => setEditingInternship(null)}
+        onConfirm={async (slug, payload) => {
+          if (!slug) {
+            alert("Slug undefined");
+            return;
+          }
 
-                {activeTab === "files" ? (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50"
-                  >
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      multiple
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">Drop files here or click to browse</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Accepted: PDF, JPG, PNG (Max 10MB)
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Project Link</label>
-                    <input
-                      type="text"
-                      value={formLink}
-                      onChange={(e) => setFormLink(e.target.value)}
-                      placeholder="Enter link..."
-                      className="mt-2 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+          const form = new FormData();
 
-            <div className="flex justify-end mt-6 gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-100"
-              >
-                Cancel
-              </button>
+          form.append("title", payload.title);
+          form.append("description", payload.description);
+          form.append("user_manual", payload.user_manual);
+          form.append("file_url", payload.file_url);
 
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg text-sm"
-              >
-                {editingSlug ? "Update" : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          if (payload.thumbnail) {
+            form.append("thumbnail", payload.thumbnail);
+          }
+
+          payload.files.forEach((file) => {
+            form.append("file", file);
+          });
+
+          try {
+            await fetchWithAuth(
+              `${API_URL}/admin/products/internship/update/${slug}`,
+              {
+                method: "PUT",
+                body: form,
+              }
+            );
+
+            await fetchInternships();
+          } catch (err) {
+            console.error(err);
+            alert("Failed to edit internship");
+          } finally {
+            setEditingInternship(null);
+          }
+        }}
+      />
+
+      {/* DELETE */}
+      <DeleteInternship
+        open={!!deletingInternship}
+        data={deletingInternship}
+        onClose={() => setDeletingInternship(null)}
+        onConfirm={async (slug) => {
+          console.log("DELETE internship:", slug);
+
+          await fetchWithAuth(`${API_URL}/admin/products/internship/delete/${slug}`, {
+            method: "DELETE",
+          });
+
+          await fetchInternships();
+        }}
+      />
     </div>
   );
 }

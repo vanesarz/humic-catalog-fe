@@ -72,7 +72,7 @@ export default function CreatePartner({ open, onClose, onConfirm }: CreatePartne
                     src={logoPreview}
                     alt="preview"
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-contain rounded-lg"
                   />
                 </div>
                 <p className="text-sm text-gray-500 mt-2">Click to replace</p>

@@ -36,6 +36,7 @@ export default function LoginPage() {
     try {
       const res = await fetch(
         "https://catalog-api.humicprototyping.net/api/login",
+        // "http://localhost:8000/api/login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
