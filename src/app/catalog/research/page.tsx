@@ -4,15 +4,28 @@ import { useState, useEffect } from "react";
 import { Card, Header } from "@/components";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface ApiProductRaw {
+  id: number;
+  title: string;
+  subtitle: string | null;
+  category: "Research Project" | "Internship Project";
+  description: string | null;
+  file_path: string | null;
+  thumbnail_path: string | null;
+}
+
+interface ApiResponse {
+  data: ApiProductRaw[];
+}
+
 interface ApiProduct {
   id?: number;
   title: string;
-  slug?: string;
+  slug: string;
   subtitle: string | null;
   category: "Research Project" | "Internship Project";
-  description?: string | null;
-  file_path?: string | null;
-  thumbnail_path?: string | null;
+  description: string | null;
+  image: string;
 }
 
 export default function ResearchCatalog() {
@@ -33,29 +46,30 @@ export default function ResearchCatalog() {
         const res = await fetch(
           "https://catalog-api.humicprototyping.net/api/public/products?category=Research Project"
         );
-        const data = await res.json();
+        
+        const data: ApiResponse = await res.json();
 
-        if (!Array.isArray(data?.data)) {
+        if (!Array.isArray(data.data)) {
           console.error("Invalid API response", data);
           setProducts([]);
           return;
         }
 
-        const formatted: ApiProduct[] = (data.data as ApiProduct[]).map((item, i) => {
+        const formatted: ApiProduct[] = data.data.map((item, i) => {
           const slugFromTitle = item.title
             ? item.title.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")
             : `product-${i}`;
 
           return {
+            id: item.id,
             title: item.title || "Untitled",
-            subtitle: item.subtitle || "",
-            image: item.thumbnail_path
-              ? item.thumbnail_path.startsWith("http")
-                ? item.thumbnail_path
-                : `https://catalog-api.humicprototyping.net/${item.thumbnail_path}`
-              : "/images/thumbnail.png",
+            subtitle: item.subtitle,
+            description: item.description,
             slug: slugFromTitle,
-            category: item.category || "Research Project",
+            category: item.category,
+            image: item.thumbnail_path
+              ? `https://catalog-api.humicprototyping.net/storage/${item.thumbnail_path}`
+              : "/images/thumbnail.png",
           };
         });
 
@@ -90,12 +104,8 @@ export default function ResearchCatalog() {
           <Card
             key={`${p.id}-${p.slug}-${i}`}
             title={p.title}
-            subtitle={p.subtitle || ""}
-            image={
-              p.thumbnail_path
-                ? `https://catalog-api.humicprototyping.net/storage/${p.thumbnail_path}`
-                : "/images/thumbnail.png"
-            }
+            description={p.description || ""}
+            image={p.image}
             category={p.category}
             href={`/catalog/${p.slug}`}
           />

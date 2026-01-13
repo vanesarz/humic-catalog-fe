@@ -11,44 +11,53 @@ interface EditResearchProps {
   open: boolean;
   data: Research | null;
   onClose: () => void;
-  onConfirm: (slug: string, payload: {
-    title: string;
-    description: string;
-    user_manual: string;
-    file_url: string;
-    thumbnail: File | null;
-    files: File[];
-  }) => Promise<void>;
+  onConfirm: (
+    slug: string,
+    payload: {
+      title: string;
+      description: string;
+      user_manual: string;
+      file_url: string;
+      thumbnail: File | null;
+      files: File[];
+    }
+  ) => Promise<void>;
 }
 
-export default function EditResearch({ open, data, onClose, onConfirm }: EditResearchProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [user_manual, setManual] = useState("");
-  const [file_url, setLink] = useState("");
+export default function EditResearch({
+  open,
+  data,
+  onClose,
+  onConfirm,
+}: EditResearchProps) {
+  const [title, setTitle] = useState<string | null>(null);
+  const [description, setDescription] = useState<string | null>(null);
+  const [user_manual, setManual] = useState<string | null>(null);
+  const [file_url, setLink] = useState<string | null>(null);
 
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
   const [files, setFiles] = useState<File[]>([]);
+  const [existingPdf, setExistingPdf] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || !open) return;
 
-    // pre-fill semua field dengan value dari data, fallback ke "" kalo null
-    setTitle(data.title || "");
-    setDescription(data.description ?? "");
-    setManual(data.user_manual ?? "");
-    setLink(data.file_url ?? "");
-    setThumbnail(null); // belum ada file baru
-    setThumbnailPreview(
-      data.thumbnail
-        ? `https://catalog-api.humicprototyping.net/storage/${data.thumbnail}`
-        : null
-    );
+    setTitle(data.title ?? null);
+    setDescription(data.description ?? null);
+    setManual(data.user_manual ?? null);
+    setLink(data.file_url ?? null);
+
+
+    setThumbnail(null);
+    setThumbnailPreview(data.thumbnail ?? null);
+
+    setExistingPdf(data.file_path ?? null);
     setFiles([]);
-  }, [data]);
+  }, [data, open]);
 
   const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,27 +67,33 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
   };
 
   const handleFilesChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setFiles(Array.from(e.target.files));
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFiles([file]);
+    setExistingPdf(null);
   };
 
   const handleEdit = async () => {
     if (!data) return;
-    if (!title) return alert("Title is required");
-    if (!description) return alert("Description is required");
+
+    const payload = {
+      title: title ?? data.title,
+      description: description ?? data.description ?? "",
+      user_manual: user_manual ?? data.user_manual ?? "",
+      file_url: file_url ?? data.file_url ?? "",
+      thumbnail,
+      files,
+    };
+
+
+    if (!payload.title) {
+      alert("Title is required");
+      return;
+    }
 
     try {
       setLoading(true);
-
-      await onConfirm(data.slug, {
-        title: title.trim() || data.title,
-        description: description.trim() || data.description || "",
-        user_manual: user_manual.trim() || data.user_manual || "",
-        file_url: file_url.trim() || data.file_url || "",
-        thumbnail,
-        files,
-      });
-
+      await onConfirm(data.slug, payload);
       onClose();
     } catch (err) {
       console.error(err);
@@ -101,9 +116,8 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
                 Product Name
               </label>
               <input
-                value={title}
+                value={title ?? data?.title ?? ""}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter product name"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring ring-red-700 outline-none"
               />
             </div>
@@ -113,9 +127,8 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
                 Description
               </label>
               <textarea
-                value={description}
+                value={description ?? data?.description ?? ""}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description"
                 className="w-full mt-1 px-3 py-2 max-h-48 min-h-32 border border-gray-300 rounded-lg text-sm focus:ring ring-red-700 outline-none"
               />
             </div>
@@ -125,9 +138,8 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
                 User Manual <span className="text-red-700">(Optional)</span>
               </label>
               <input
-                value={user_manual}
+                value={user_manual ?? data?.user_manual ?? ""}
                 onChange={(e) => setManual(e.target.value)}
-                placeholder="Enter user manual link"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring ring-red-700 outline-none"
               />
             </div>
@@ -135,7 +147,6 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
 
           {/* RIGHT */}
           <div className="space-y-4">
-            {/* Thumbnail */}
             <div>
               <label className="text-sm font-medium text-gray-700">
                 Thumbnail
@@ -146,18 +157,18 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
                     <div className="relative w-24 h-24">
                       <Image
                         src={thumbnailPreview}
-                        alt="thumbnail preview"
+                        alt="thumbnail"
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-contain rounded-lg"
                       />
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 mt-2">
                       Click to replace
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-row items-center justify-between text-gray-500">
-                    <p className="text-sm font-medium">Choose file</p>
+                  <div className="flex justify-between text-gray-500">
+                    <p>Choose file</p>
                     <Upload className="w-4 h-4" />
                   </div>
                 )}
@@ -175,47 +186,60 @@ export default function EditResearch({ open, data, onClose, onConfirm }: EditRes
                 Project Link
               </label>
               <input
-                value={file_url}
+                value={file_url ?? data?.file_url ?? ""}
                 onChange={(e) => setLink(e.target.value)}
-                placeholder="Enter project link"
                 className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring ring-red-700 outline-none"
               />
             </div>
 
-            {/* Files */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Upload PDF / Images
+                Upload PDF
               </label>
-              <label className="mt-1 block w-full border border-dashed border-gray-300 rounded-lg px-3 py-2 cursor-pointer text-sm text-center hover:border-red-700 transition">
-                <div className="flex flex-row items-center justify-between text-gray-500">
-                  <p className="text-sm font-medium">
-                    {files.length > 0
-                      ? `${files.length} file(s) selected`
-                      : "Choose files"}
-                  </p>
+
+              {existingPdf && !files.length && (
+                <div className="mt-1 flex items-center justify-between border px-3 py-2 rounded-lg text-sm bg-gray-50">
+                  <span className="truncate">
+                    {existingPdf.split("/").pop()}
+                  </span>
+                  <button
+                    onClick={() => setExistingPdf(null)}
+                    className="text-red-600 text-xs"
+                  >
+                    remove
+                  </button>
+                </div>
+              )}
+
+              {files.length > 0 && (
+                <div className="mt-1 flex items-center justify-between border px-3 py-2 rounded-lg text-sm bg-gray-50">
+                  <span className="truncate">{files[0].name}</span>
+                  <button
+                    onClick={() => setFiles([])}
+                    className="text-red-600 text-xs"
+                  >
+                    remove
+                  </button>
+                </div>
+              )}
+
+              <label className="mt-2 block w-full border border-dashed border-gray-300 rounded-lg px-3 py-2 cursor-pointer text-sm text-center hover:border-red-700 transition">
+                <div className="flex justify-between text-gray-500">
+                  <p>{existingPdf || files.length ? "Replace file" : "Choose file"}</p>
                   <Upload className="w-4 h-4" />
                 </div>
                 <input
                   type="file"
-                  multiple
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept="application/pdf"
                   onChange={handleFilesChange}
                   className="hidden"
                 />
               </label>
-
-              <div className="mt-2 w-full border border-blue-400 rounded-lg px-3 py-2 bg-blue-50">
-                <p className="text-xs text-blue-800">
-                  Images will be automatically converted to PDF format.
-                </p>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* ACTIONS */}
-        <div className="grid grid-cols-2 justify-stretch gap-2 pt-4 w-full">
+        <div className="grid grid-cols-2 gap-2 pt-4">
           <Button variant="primary" onClick={handleEdit} disabled={loading}>
             {loading ? "Updating..." : "Update"}
           </Button>

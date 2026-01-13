@@ -4,26 +4,34 @@ import { useState, useEffect } from "react";
 import { Card, Header } from "@/components";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface ApiProduct {
-  title?: string;
-  description?: string;
-  thumbnail_path?: string;
-  slug: string;
-  category?: string;
-}
-
-interface Product {
+interface ApiProductRaw {
+  id: number;
   title: string;
-  subtitle: string;
-  image: string;
-  category: string;
-  slug: string;
+  subtitle: string | null;
+  category: "Research Project" | "Internship Project";
+  description: string | null;
+  file_path: string | null;
+  thumbnail_path: string | null;
 }
 
-export default function InternshipCatalog() {
+interface ApiResponse {
+  data: ApiProductRaw[];
+}
+
+interface ApiProduct {
+  id?: number;
+  title: string;
+  slug: string;
+  subtitle: string | null;
+  category: "Research Project" | "Internship Project";
+  description: string | null;
+  image: string;
+}
+
+export default function ResearchCatalog() {
   const itemsPerPage = 8;
   const [page, setPage] = useState(1);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
@@ -38,26 +46,32 @@ export default function InternshipCatalog() {
         const res = await fetch(
           "https://catalog-api.humicprototyping.net/api/public/products?category=Internship Project"
         );
-        const data = await res.json();
+        
+        const data: ApiResponse = await res.json();
 
-        if (!Array.isArray(data?.data)) {
+        if (!Array.isArray(data.data)) {
           console.error("Invalid API response", data);
           setProducts([]);
           return;
         }
 
-        const formatted: Product[] = (data.data as ApiProduct[]).map((item) => ({
-          title: item.title || "Untitled",
-          subtitle: item.description || "",
-          // fallback untuk thumbnail, pastikan absolute URL
-          image: item.thumbnail_path
-            ? item.thumbnail_path.startsWith("http")
-              ? item.thumbnail_path
-              : `https://catalog-api.humicprototyping.net/${item.thumbnail_path}`
-            : "/images/thumbnail.png",
-          slug: item.slug,
-          category: item.category || "Internship Project",
-        }));
+        const formatted: ApiProduct[] = data.data.map((item, i) => {
+          const slugFromTitle = item.title
+            ? item.title.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")
+            : `product-${i}`;
+
+          return {
+            id: item.id,
+            title: item.title || "Untitled",
+            subtitle: item.subtitle,
+            description: item.description,
+            slug: slugFromTitle,
+            category: item.category,
+            image: item.thumbnail_path
+              ? `https://catalog-api.humicprototyping.net/storage/${item.thumbnail_path}`
+              : "/images/thumbnail.png",
+          };
+        });
 
         setProducts(formatted);
       } catch (err) {
@@ -88,12 +102,12 @@ export default function InternshipCatalog() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl w-full px-6">
         {currentItems.map((p, i) => (
           <Card
-            key={p.slug || `product-${i}`} // fallback key kalau slug kosong/duplikat
+            key={`${p.id}-${p.slug}-${i}`}
             title={p.title}
-            subtitle={p.subtitle}
+            description={p.description || ""}
             image={p.image}
             category={p.category}
-            href={`/catalog/research/${p.slug}`}
+            href={`/catalog/${p.slug}`}
           />
         ))}
       </div>

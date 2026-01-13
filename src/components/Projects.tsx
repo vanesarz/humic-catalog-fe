@@ -154,7 +154,7 @@ export default function ProjectsSection() {
               <Card
                 key={`${p.id}-${p.slug}-${i}`}
                 title={p.title}
-                subtitle={p.subtitle ?? ""}
+                description={p.description ?? ""}
                 image={
                   p.thumbnail_path
                     ? `https://catalog-api.humicprototyping.net/storage/${p.thumbnail_path}`

@@ -227,7 +227,22 @@ export default function InternshipCatalog() {
 
                         <button
                           className="text-gray-600 hover:text-red-700"
-                          onClick={() => setEditingInternship(item)}
+                          onClick={async () => {
+                            const res = await fetchWithAuth(
+                              `${API_URL}/admin/products/internship/${item.slug}`
+                            );
+
+                            const d = res.data;
+
+                            setEditingInternship({
+                              ...d,
+                              slug: item.slug,
+                              thumbnail: d.thumbnail
+                                ? `${API_BASE}/storage/${d.thumbnail}`
+                                : null,
+                            });
+                          }}
+
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -318,11 +333,13 @@ export default function InternshipCatalog() {
             form.append("file", file);
           });
 
+          form.append("_method", "PUT");
+
           try {
             await fetchWithAuth(
               `${API_URL}/admin/products/internship/update/${slug}`,
               {
-                method: "PUT",
+                method: "POST",
                 body: form,
               }
             );

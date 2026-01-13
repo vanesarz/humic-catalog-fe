@@ -83,7 +83,7 @@ export default function EditPartner({ open, onClose, data, onConfirm }: EditPart
                     src={logoPreview}
                     alt="preview"
                     fill
-                    className="object-cover rounded-lg"
+                    className="object-contain rounded-lg"
                   />
                 </div>
                 <p className="text-sm text-gray-500 mt-2">Click to replace</p>
@@ -102,11 +102,11 @@ export default function EditPartner({ open, onClose, data, onConfirm }: EditPart
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <div className="grid grid-cols-2 gap-2 pt-4">
           <Button variant="primary" onClick={handleSave} disabled={loading}>
             {loading ? "Saving..." : "Save"}
           </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       </div>
     </Dialog>

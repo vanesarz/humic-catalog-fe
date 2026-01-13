@@ -6,13 +6,13 @@ import React from "react";
 
 interface CardProps {
   title: string;
-  subtitle: string;
+  description: string;
   image: string;
   category?: string;
   href?: string;
 }
 
-const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) => {
+const Card: React.FC<CardProps> = ({ title, description, image, category, href }) => {
   const cardContent = (
     <div className="h-80 bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       {/* Thumbnail */}
@@ -22,7 +22,7 @@ const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) =
             src={image}
             alt={title}
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 15vw"
           />
         </div>
@@ -31,7 +31,7 @@ const Card: React.FC<CardProps> = ({ title, subtitle, image, category, href }) =
       {/* Text content */}
       <div className="p-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{subtitle}</p>
+        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{description}</p>
         {category && <p className="text-xs text-gray-400 mt-2">{category}</p>}
       </div>
     </div>

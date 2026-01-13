@@ -91,11 +91,11 @@ export default function CreatePartner({ open, onClose, onConfirm }: CreatePartne
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
+        <div className="grid grid-cols-2 gap-2 pt-4">
           <Button variant="primary" onClick={handleCreate} disabled={loading}>
             {loading ? "Creating..." : "Create"}
           </Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
         </div>
       </div>
     </Dialog>

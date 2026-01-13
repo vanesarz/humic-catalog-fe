@@ -2,7 +2,7 @@ import Button from "@/components/Button";
 
 export default function Hero() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       {/* Hero Section */}
       <section className="flex flex-col justify-center bg-gradient-to-b from-gray-50 to-white -mt-10 overflow-hidden py-80">
         <div className="max-w-7xl mx-auto w-full grid md:grid-cols-[55%_40%] items-center gap-12">

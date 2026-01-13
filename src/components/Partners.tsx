@@ -7,7 +7,7 @@ import Image from "next/image";
 interface Partner {
   id: number;
   name: string;
-  logo_path: string | null;
+  image_path: string | null;
   website_url: string | null;
 }
 
@@ -47,8 +47,8 @@ export default function Partners() {
       ) : partners.length > 0 ? (
         <div className="flex flex-wrap justify-center gap-3">
           {partners.map((p, index) => {
-            const logo = p.logo_path
-              ? `https://catalog-api.humicprototyping.net/storage/${p.logo_path}`
+            const logo = p.image_path
+              ? `https://catalog-api.humicprototyping.net/storage/${p.image_path}`
               : "/partners/default.png";
 
             return (

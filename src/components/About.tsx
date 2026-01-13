@@ -4,7 +4,6 @@ export default function About() {
   return (
     <section id="about" className="flex flex-col items-center justify-center text-center px-6 py-20 bg-gray-100">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12">
-        {/* kiri: text */}
         <div>
           <p className="text-lg md:text-3xl font-bold text-center text-gray-900">
             About CoE HUMIC Engineering

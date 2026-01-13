@@ -182,7 +182,7 @@ export default function CreateResearch({
             {/* Files */}
             <div>
               <label className="text-sm font-medium text-gray-700">
-                Upload PDF / Images
+                Upload PDF
               </label>
               <label className="mt-1 block w-full border border-dashed border-gray-300 rounded-lg px-3 py-2 cursor-pointer text-sm text-center hover:border-red-700 transition">
                 <div className="flex flex-row items-center justify-between text-gray-500">
@@ -196,7 +196,7 @@ export default function CreateResearch({
                 <input
                   type="file"
                   multiple
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf"
                   onChange={handleFilesChange}
                   className="hidden"
                 />

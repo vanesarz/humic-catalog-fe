@@ -141,9 +141,9 @@ export default function PartnerCatalog() {
             <table className="w-full text-sm text-left text-gray-700">
               <thead>
                 <tr className="border-b border-gray-200 text-gray-600">
-                  <th className="py-2 px-3 w-1/6">Logo</th>
-                  <th className="py-2 px-3 w-4/6">Partner Name</th>
-                  <th className="py-2 px-3 text-center w-1/6">Actions</th>
+                  <th className="py-2 px-3 w-1/7">Logo</th>
+                  <th className="py-2 px-3 w-5/7">Partner Name</th>
+                  <th className="py-2 px-3 text-center w-1/7">Actions</th>
                 </tr>
               </thead>
 
@@ -153,7 +153,7 @@ export default function PartnerCatalog() {
                     key={item.slug}
                     className="border-b border-gray-100 hover:bg-gray-50 transition"
                   >
-                    <td className="py-3 px-3 w-1/6">
+                    <td className="py-3 px-3 w-1/7">
                       <div className="w-12 h-12 rounded-lg overflow-hidden relative">
                         {item.image ? (
                           <Image
@@ -171,11 +171,11 @@ export default function PartnerCatalog() {
                       </div>
                     </td>
 
-                    <td className="py-3 px-3 font-medium text-gray-900 place-content-center w-4/6">
+                    <td className="py-3 px-3 font-medium text-gray-900 place-content-center w-5/7">
                       {item.name}
                     </td>
 
-                    <td className="py-3 px-3 text-center w-1/6">
+                    <td className="py-3 px-3 text-center w-1/7">
                       <div className="inline-flex gap-[16px]">
                         <button
                           className="text-gray-600 hover:text-red-700"

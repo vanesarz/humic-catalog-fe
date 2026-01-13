@@ -25,7 +25,7 @@ export default function ViewResearch({ open, onClose, data }: ViewResearchProps)
               src={data.thumbnail}
               alt={data.title}
               fill
-              className="object-cover"
+              className="object-contain"
             />
           </div>
         )}

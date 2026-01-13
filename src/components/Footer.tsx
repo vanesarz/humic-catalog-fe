@@ -103,7 +103,7 @@ export default function Footer() {
           <h4 className="text-white font-semibold text-lg mb-4">Others</h4>
           <ul className="space-y-2">
             <li>
-              <Link href="/contact" className="hover:text-white transition">
+              <Link href="/?scrollTo=footer" className="hover:text-white transition">
                 Contact Us
               </Link>
             </li>

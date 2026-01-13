@@ -25,7 +25,7 @@ export default function ViewInternship({ open, onClose, data }: ViewInternshipPr
               src={data.thumbnail}
               alt={data.title}
               fill
-              className="object-cover"
+              className="object-contain"
             />
           </div>
         )}
